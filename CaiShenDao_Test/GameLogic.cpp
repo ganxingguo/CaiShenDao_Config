@@ -18,7 +18,7 @@ void CGameLogic::RunResult(std::function<void(int, RollResult&)> funRb)
 {
 	for (int i = 0; i < m_RunCnt; )
 	{
-		int nTmp = CConfig::Random.randUnsigned() % 2;
+		int nTmp = SConfig->Random.randUnsigned() % 2;
 		m_cbUserCtrl = nTmp == 0 ? 1 : -1;
 
 		if (m_iLeftFreeGamesCnt <= 0) {
@@ -66,7 +66,7 @@ void CGameLogic::GetResultProbability()
 	strProbability = "ап\t";
 	for (int i = 1; i < ImageType_Max; ++i)
 	{
-		sprintf_s(szLog, "%s\t", CConfig::GetImageName((EmImageType)i).c_str());
+		sprintf_s(szLog, "%s\t", SConfig->GetImageName((EmImageType)i).c_str());
 		strProbability += szLog;
 	}
 
@@ -202,7 +202,7 @@ void CGameLogic::CalGameResult(RollResult& result, char cbUserWin)
 		{
 			for (int j = 0; j < COLUMN_NUM; ++j)
 			{
-				result.ImgType[i][j] = CConfig::GetRandomImage(j);
+				result.ImgType[i][j] = SConfig->GetRandomImage(j);
 				m_ImageProbability[j][result.ImgType[i][j]]++;
 			}
 		}
@@ -216,7 +216,7 @@ void CGameLogic::CalGameResult(RollResult& result, char cbUserWin)
 			if (result.rewardImage[i] > ImageType_Null &&
 				result.rewardImage[i] < ImageType_JingLuo)
 			{
-				int nDstMultiple = CConfig::GetImageMultiple(result.rewardImage[i], result.lineCnt[i][0]);
+				int nDstMultiple = SConfig->GetImageMultiple(result.rewardImage[i], result.lineCnt[i][0]);
 				nDstMultiple *= result.lineCnt[i][1];
 				result.multipleAndMoney[i][0] = nDstMultiple;
 

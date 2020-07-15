@@ -9,20 +9,17 @@
 
 int main()
 {
-	if (!CConfig::LoadConfig()) {
-		return 0;
-	}
 
 	// 打开log文件
 	SYSTEMTIME tm;
 	GetLocalTime(&tm);
 
-	int nRandNum = CConfig::Random.randUnsigned() % 1000;
+	int nRandNum = SConfig->Random.randUnsigned() % 1000;
 	char szFilename[256] = { 0 };
 	sprintf(szFilename, "%02d-%02d_%02d-%02d-%02d_%04d.txt",
 		tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond, nRandNum);
 
-	string strDir = CConfig::GetCurrentDir();
+	string strDir = SConfig->GetCurrentDir();
 	strDir += szFilename;
 
 	FILE *fp = fopen(strDir.c_str(), "w+");
@@ -52,11 +49,11 @@ int main()
 		for (int i = 0; i < LINE_NUM; ++i)
 		{
 			sprintf_s(szTmp, "%s\t%s\t%s\t%s\t%s\n",
-				CConfig::GetImageName(result.ImgType[i][0]).c_str(),
-				CConfig::GetImageName(result.ImgType[i][1]).c_str(),
-				CConfig::GetImageName(result.ImgType[i][2]).c_str(),
-				CConfig::GetImageName(result.ImgType[i][3]).c_str(),
-				CConfig::GetImageName(result.ImgType[i][4]).c_str());
+				SConfig->GetImageName(result.ImgType[i][0]).c_str(),
+				SConfig->GetImageName(result.ImgType[i][1]).c_str(),
+				SConfig->GetImageName(result.ImgType[i][2]).c_str(),
+				SConfig->GetImageName(result.ImgType[i][3]).c_str(),
+				SConfig->GetImageName(result.ImgType[i][4]).c_str());
 			strLog += szTmp;
 		}
 
