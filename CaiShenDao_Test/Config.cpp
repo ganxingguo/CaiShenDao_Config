@@ -1,14 +1,5 @@
 #include "Config.h"
 #include "WinRandom.h"
-#include <map>
-
-int CConfig::ImageProbability[5][12] = { 0 };
-WinRandom CConfig::Random;
-
-CConfig::CConfig()
-{
-	LoadConfig();
-}
 
 CConfig* CConfig::GetInstance()
 {
@@ -39,20 +30,54 @@ bool CConfig::LoadConfig()
 		return false;
 	}
 
-	memset(ImageProbability, 0, sizeof(ImageProbability));
+	memset(m_ImageProbability, 0, sizeof(m_ImageProbability));
 
 	char fileBuf[1024] = { 0 };
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 100; ++i)
 	{
 		fgets(fileBuf, sizeof(fileBuf), fpConfig);
 		char* strNums = strtok(fileBuf, "//");
 		if (strNums) {
-			int nColumn = 1;
-			char* pNum = strtok(strNums, ",");
-			while (pNum)
+			if (i < 5)
 			{
-				ImageProbability[i][nColumn++] = atoi(pNum);
-				pNum = strtok(NULL, ",");
+				int nColumn = 1;
+				char* pNum = strtok(strNums, ",");
+				while (pNum)
+				{
+					m_ImageProbability[i][nColumn++] = atoi(pNum);
+					pNum = strtok(NULL, ",");
+				}
+			}
+			else 
+			{
+				string strTmp = strNums;
+				size_t equalIdx = strTmp.find("=");
+				if (equalIdx != string::npos)
+				{
+					string tmpNum = strTmp.substr(equalIdx + 1);
+					if (strTmp.find(UserWinRat) != string::npos) {
+						m_mapRat.insert(make_pair(UserWinRat, atoi(tmpNum.c_str())));
+					}
+					else if (strTmp.find(MultipleOnto100) != string::npos) {
+						m_mapRat.insert(make_pair(MultipleOnto100, atoi(tmpNum.c_str())));
+					}
+					else if (strTmp.find(Multiple50_100) != string::npos) {
+						m_mapRat.insert(make_pair(Multiple50_100, atoi(tmpNum.c_str())));
+					}
+					else if (strTmp.find(Multiple10_50) != string::npos) {
+						m_mapRat.insert(make_pair(Multiple10_50, atoi(tmpNum.c_str())));
+					}
+					else if (strTmp.find(Multiple3_10) != string::npos) {
+						m_mapRat.insert(make_pair(Multiple3_10, atoi(tmpNum.c_str())));
+					}
+					else if (strTmp.find(Multiple0_3) != string::npos) {
+						m_mapRat.insert(make_pair(Multiple0_3, atoi(tmpNum.c_str())));
+					}
+					else if (strTmp.find(MultipleFreeGame) != string::npos) {
+						m_mapRat.insert(make_pair(MultipleFreeGame, atoi(tmpNum.c_str())));
+					}
+				}
+
 			}
 		}
 
@@ -60,6 +85,7 @@ bool CConfig::LoadConfig()
 			break;
 		}
 	}
+
 
 	fclose(fpConfig);
 
@@ -69,7 +95,7 @@ bool CConfig::LoadConfig()
 		char szTmp[128];
 		for (int j = 0; j < 12; ++j)
 		{
-			_itoa(ImageProbability[i][j], szTmp, 10);
+			_itoa(m_ImageProbability[i][j], szTmp, 10);
 			strProbability += szTmp;
 			strProbability += j == 11 ? "" : "-";
 		}
@@ -78,7 +104,7 @@ bool CConfig::LoadConfig()
 
 	printf(strProbability.c_str());
 
-	printf("设定概率：\n");
+	printf("设定权重概率：\n");
 	strProbability = "列\t";
 	char szLog[512] = { 0 };
 	for (int i = 1; i < ImageType_Max; ++i)
@@ -95,19 +121,32 @@ bool CConfig::LoadConfig()
 		int nTotal = 0;
 		for (int i = 0; i < ImageType_Max; ++i)
 		{
-			nTotal += ImageProbability[column][i];
+			nTotal += m_ImageProbability[column][i];
 		}
 
 		for (int i = 1; i < ImageType_Max; ++i)
 		{
-			sprintf_s(szLog, "%.02f%%%%\t", ImageProbability[column][i] * 1.0 / nTotal * 100.0);
+			sprintf_s(szLog, "%.02f%%%%\t", m_ImageProbability[column][i] * 1.0 / nTotal * 100.0);
 			strProbability += szLog;
 		}
 		strProbability += "\n";
 	}
 	printf(strProbability.c_str());
-	printf("\n");
+
+	printf("其他概率：UserWin：%d%%, [100,2916]: %d%%, [50,100): %d%%, [10,50): %d%%, [3,10): %d%%, (0,3): %d%% freeGame : %d%%\n\n",
+		m_mapRat[UserWinRat], 
+		m_mapRat[MultipleOnto100], 
+		m_mapRat[Multiple50_100], 
+		m_mapRat[Multiple10_50], 
+		m_mapRat[Multiple3_10], 
+		m_mapRat[Multiple0_3], 
+		m_mapRat[MultipleFreeGame]);
 	return true;
+}
+
+int CConfig::RandInt(int nMax, int nMin/*=0*/)
+{
+	return m_Random.randUnsigned() % nMax + nMin;
 }
 
 int CConfig::GetImageMultiple(UINT nKind, UINT nNum)
@@ -141,18 +180,18 @@ EmImageType CConfig::GetRandomImage(int nColumn)
 	int nTotal = 0;
 	for (int i = 0; i < ImageType_Max; ++i)
 	{
-		nTotal += ImageProbability[nColumn][i];
+		nTotal += m_ImageProbability[nColumn][i];
 	}
 
 	int nTmpNum = 0;
-	int nRandNum = Random.randUnsigned() % nTotal + 1;
+	int nRandNum = RandInt(nTotal, 1);
 	for (EmImageType i = ImageType_CaiShen; i < ImageType_Max; )
 	{
-		if (nRandNum > nTmpNum && nRandNum <= nTmpNum + ImageProbability[nColumn][i]) {
+		if (nRandNum > nTmpNum && nRandNum <= nTmpNum + m_ImageProbability[nColumn][i]) {
 			return i;
 		}
 
-		nTmpNum += ImageProbability[nColumn][i];
+		nTmpNum += m_ImageProbability[nColumn][i];
 		i = (EmImageType)(i + 1);
 	}
 
@@ -188,5 +227,15 @@ std::string CConfig::GetImageName(EmImageType emImage)
 	}
 
 	return strTmp;
+}
+
+int CConfig::GetConfigMultiple(string strKey)
+{
+	if (m_mapRat.find(strKey) != m_mapRat.end())
+	{
+		return m_mapRat[strKey];
+	}
+		
+	return 0;
 }
 

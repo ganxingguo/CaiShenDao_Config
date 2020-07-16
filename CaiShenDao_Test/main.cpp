@@ -9,12 +9,15 @@
 
 int main()
 {
+	if (!SConfig->LoadConfig()) {
+		return 0;
+	}
 
 	// 打开log文件
 	SYSTEMTIME tm;
 	GetLocalTime(&tm);
 
-	int nRandNum = SConfig->Random.randUnsigned() % 1000;
+	int nRandNum = SConfig->RandInt(1000);
 	char szFilename[256] = { 0 };
 	sprintf(szFilename, "%02d-%02d_%02d-%02d-%02d_%04d.txt",
 		tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond, nRandNum);

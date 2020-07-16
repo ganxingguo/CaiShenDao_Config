@@ -18,8 +18,14 @@ void CGameLogic::RunResult(std::function<void(int, RollResult&)> funRb)
 {
 	for (int i = 0; i < m_RunCnt; )
 	{
-		int nTmp = SConfig->Random.randUnsigned() % 2;
-		m_cbUserCtrl = nTmp == 0 ? 1 : -1;
+		int nTmp = SConfig->RandInt(100);
+		if (nTmp < SConfig->GetConfigMultiple(UserWinRat))
+		{
+			m_cbUserCtrl = 1;
+		}
+		else {
+			m_cbUserCtrl = -1;
+		}
 
 		if (m_iLeftFreeGamesCnt <= 0) {
 			m_bFreeGame = false;
@@ -86,7 +92,7 @@ void CGameLogic::GetResultProbability()
 	printf(strProbability.c_str());
 	printf("\n");
 
-	printf("总计输赢 NEW3.0：%d\n\n", m_TotalWin);
+	printf("总计输赢 NEW4.0：%d\n\n", m_TotalWin);
 }
 
 void CGameLogic::GetResultSubFun(RollResult& result, TreeNode* pParentNode, int nColumn)
@@ -231,35 +237,51 @@ void CGameLogic::CalGameResult(RollResult& result, char cbUserWin)
 			result.iWinMoney -= m_iBetMoney;
 		}
 
-		//如果转出倍率总计为：  100~2916倍(75 % )， 50~99.9（50%)， 10~49.9(30 % )，免费游戏(25 % ) 的机率需重新转轮给图
+		//概率重转：100~2916倍，50~99.9，10~49.9，免费游戏(25%)
 		if (result.iTotalMultiple >= 100 * 100)
 		{
-			nRand = CConfig::Random.randUnsigned() % 100;
-			if (nRand < 75) {
+			nRand = SConfig->RandInt(100);
+			if (nRand < SConfig->GetConfigMultiple(MultipleOnto100)) {
 				continue;
 			}
 		}
 
 		if (result.iTotalMultiple >= 50 * 100 && result.iTotalMultiple < 100 * 100)
 		{
-			nRand = CConfig::Random.randUnsigned() % 100;
-			if (nRand < 50) {
+			nRand = SConfig->RandInt(100);
+			if (nRand <  SConfig->GetConfigMultiple(Multiple50_100)) {
 				continue;
 			}
 		}
 
 		if (result.iTotalMultiple >= 10 * 100 && result.iTotalMultiple < 50 * 100)
 		{
-			nRand = CConfig::Random.randUnsigned() % 100;
-			if (nRand < 30) {
+			nRand = SConfig->RandInt(100);
+			if (nRand <  SConfig->GetConfigMultiple(Multiple10_50)) {
+				continue;
+			}
+		}
+
+		if (result.iTotalMultiple >= 3 * 100 && result.iTotalMultiple < 10 * 100)
+		{
+			nRand = SConfig->RandInt(100);
+			if (nRand <  SConfig->GetConfigMultiple(Multiple3_10)) {
+				continue;
+			}
+		}
+
+		if (result.iTotalMultiple > 0 && result.iTotalMultiple < 3 * 100)
+		{
+			nRand = SConfig->RandInt(100);
+			if (nRand <  SConfig->GetConfigMultiple(Multiple0_3)) {
 				continue;
 			}
 		}
 		
 		if (result.iFreeGameCnt > 0)
 		{
-			nRand = CConfig::Random.randUnsigned() % 100;
-			if (nRand < 25) {
+			nRand = SConfig->RandInt(100);
+			if (nRand < SConfig->GetConfigMultiple(MultipleFreeGame)) {
 				continue;
 			}
 		}
